@@ -1,403 +1,115 @@
-/*
-====================================================
-PROBLEM STATEMENT DATA
-====================================================
+const todayDate = document.getElementById("todayDate");
+todayDate.textContent = new Intl.DateTimeFormat("en-IN", {
+  weekday: "long", day: "numeric", month: "short", year: "numeric"
+}).format(new Date());
 
-For now, the data is stored here.
+const navToggle = document.getElementById("navToggle");
+const mainNav = document.getElementById("mainNav");
 
-Later, you can replace this array with:
-- Firebase
-- Supabase
-- MySQL
-- MongoDB
-- REST API
-- Any backend/database
+navToggle.addEventListener("click", () => {
+  mainNav.classList.toggle("open");
+});
 
-The rest of the website does NOT need to change.
-====================================================
-*/
+document.querySelectorAll(".nav a").forEach(link => {
+  link.addEventListener("click", () => mainNav.classList.remove("open"));
+});
 
-const problems = [
+const modal = document.getElementById("gameModal");
+const modalClose = document.getElementById("modalClose");
+const modalTitle = document.getElementById("modalTitle");
+const modalDescription = document.getElementById("modalDescription");
+const activityQuestion = document.getElementById("activityQuestion");
+const answerGrid = document.getElementById("answerGrid");
+const activityResult = document.getElementById("activityResult");
 
-    {
-        id: 1,
+const activities = {
+  faces: {
+    title: "Who is in the picture?",
+    description: "Choose the face that matches the familiar person.",
+    question: "👩",
+    answers: ["👨", "👩", "👴"],
+    correct: "👩"
+  },
+  objects: {
+    title: "Familiar things",
+    description: "Which object did you see earlier?",
+    question: "☕",
+    answers: ["📷", "☕", "🌸"],
+    correct: "☕"
+  },
+  routine: {
+    title: "My daily routine",
+    description: "Which activity usually comes first in the morning?",
+    question: "🌅",
+    answers: ["🚶", "🌅", "🍵"],
+    correct: "🌅"
+  }
+};
 
-        organization:
-            "Ministry of Development of North Eastern Region (MDoNER)",
+document.querySelectorAll("[data-game]").forEach(button => {
+  button.addEventListener("click", () => openActivity(button.dataset.game));
+});
 
-        title:
-            "AI-Based Cognitive Gaming and Memory Assistance Platform for Elderly Dementia Patients in North Eastern Region (NER)",
+function openActivity(type) {
+  const activity = activities[type];
+  modalTitle.textContent = activity.title;
+  modalDescription.textContent = activity.description;
+  activityQuestion.textContent = activity.question;
+  activityResult.textContent = "";
+  answerGrid.innerHTML = "";
 
-        category:
-            "Software",
-
-        theme:
-            "MedTech / BioTech / HealthTech"
-    }
-
-    // ADD MORE PROBLEMS HERE
-];
-
-
-
-/*
-====================================================
-ELEMENTS
-====================================================
-*/
-
-const problemGrid =
-    document.getElementById("problemGrid");
-
-const searchInput =
-    document.getElementById("searchInput");
-
-const categoryFilter =
-    document.getElementById("categoryFilter");
-
-const themeFilter =
-    document.getElementById("themeFilter");
-
-const problemCount =
-    document.getElementById("problemCount");
-
-const emptyState =
-    document.getElementById("emptyState");
-
-
-
-/*
-====================================================
-CREATE FILTER OPTIONS
-====================================================
-*/
-
-function createFilters() {
-
-    const categories = [
-        ...new Set(
-            problems.map(problem => problem.category)
-        )
-    ];
-
-    const themes = [
-        ...new Set(
-            problems.map(problem => problem.theme)
-        )
-    ];
-
-
-    categories.forEach(category => {
-
-        const option =
-            document.createElement("option");
-
-        option.value = category;
-
-        option.textContent = category;
-
-        categoryFilter.appendChild(option);
-
+  activity.answers.forEach(answer => {
+    const button = document.createElement("button");
+    button.className = "answer";
+    button.textContent = answer;
+    button.addEventListener("click", () => {
+      if (answer === activity.correct) {
+        activityResult.textContent = "Well done! That’s right. 🌿";
+      } else {
+        activityResult.textContent = "That's okay — let's try another one. 💛";
+      }
     });
+    answerGrid.appendChild(button);
+  });
 
-
-    themes.forEach(theme => {
-
-        const option =
-            document.createElement("option");
-
-        option.value = theme;
-
-        option.textContent = theme;
-
-        themeFilter.appendChild(option);
-
-    });
-
+  modal.classList.remove("hidden");
 }
-
-
-
-/*
-====================================================
-DISPLAY PROBLEMS
-====================================================
-*/
-
-function displayProblems(data) {
-
-    problemGrid.innerHTML = "";
-
-    problemCount.textContent = data.length;
-
-
-    if (data.length === 0) {
-
-        emptyState.style.display = "block";
-
-        return;
-
-    }
-
-
-    emptyState.style.display = "none";
-
-
-    data.forEach(problem => {
-
-        const card =
-            document.createElement("article");
-
-        card.className = "problem-card";
-
-
-        card.innerHTML = `
-
-            <div class="card-top">
-
-                <span class="category">
-                    ${problem.category}
-                </span>
-
-                <span class="card-number">
-                    #${String(problem.id).padStart(3, "0")}
-                </span>
-
-            </div>
-
-
-            <h3>
-                ${problem.title}
-            </h3>
-
-
-            <div class="organization">
-
-                Organization
-
-                <strong>
-                    ${problem.organization}
-                </strong>
-
-            </div>
-
-
-            <div class="card-bottom">
-
-                <div class="theme">
-                    Theme:
-                    <strong>
-                        ${problem.theme}
-                    </strong>
-                </div>
-
-                <div class="view-button">
-                    View →
-                </div>
-
-            </div>
-
-        `;
-
-
-        card.addEventListener(
-            "click",
-            () => openModal(problem)
-        );
-
-
-        problemGrid.appendChild(card);
-
-    });
-
-}
-
-
-
-/*
-====================================================
-SEARCH + FILTER
-====================================================
-*/
-
-function filterProblems() {
-
-    const search =
-        searchInput.value
-            .toLowerCase()
-            .trim();
-
-
-    const category =
-        categoryFilter.value;
-
-
-    const theme =
-        themeFilter.value;
-
-
-    const filtered =
-        problems.filter(problem => {
-
-
-            const matchesSearch =
-
-                problem.title
-                    .toLowerCase()
-                    .includes(search)
-
-                ||
-
-                problem.organization
-                    .toLowerCase()
-                    .includes(search)
-
-                ||
-
-                problem.theme
-                    .toLowerCase()
-                    .includes(search);
-
-
-            const matchesCategory =
-
-                category === "all"
-                ||
-                problem.category === category;
-
-
-            const matchesTheme =
-
-                theme === "all"
-                ||
-                problem.theme === theme;
-
-
-            return (
-                matchesSearch &&
-                matchesCategory &&
-                matchesTheme
-            );
-
-        });
-
-
-    displayProblems(filtered);
-
-}
-
-
-
-/*
-====================================================
-MODAL
-====================================================
-*/
-
-const modal =
-    document.getElementById("modal");
-
-const closeModalButton =
-    document.getElementById("closeModal");
-
-const modalCategory =
-    document.getElementById("modalCategory");
-
-const modalTitle =
-    document.getElementById("modalTitle");
-
-const modalOrganization =
-    document.getElementById("modalOrganization");
-
-const modalTheme =
-    document.getElementById("modalTheme");
-
-
-
-function openModal(problem) {
-
-    modalCategory.textContent =
-        problem.category;
-
-    modalTitle.textContent =
-        problem.title;
-
-    modalOrganization.textContent =
-        problem.organization;
-
-    modalTheme.textContent =
-        problem.theme;
-
-
-    modal.classList.add("active");
-
-    document.body.style.overflow = "hidden";
-
-}
-
-
 
 function closeModal() {
-
-    modal.classList.remove("active");
-
-    document.body.style.overflow = "";
-
+  modal.classList.add("hidden");
 }
+modalClose.addEventListener("click", closeModal);
+modal.addEventListener("click", event => {
+  if (event.target === modal) closeModal();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeModal();
+});
 
+document.getElementById("notificationBtn").addEventListener("click", () => {
+  alert("Prototype notification: Today’s memory activity is ready.");
+});
 
+document.getElementById("profileBtn").addEventListener("click", () => {
+  alert("Prototype profile menu — connect this to authentication later.");
+});
 
-closeModalButton.addEventListener(
-    "click",
-    closeModal
-);
-
-
-modal.addEventListener(
-    "click",
-    function(event) {
-
-        if (event.target === modal) {
-
-            closeModal();
-
-        }
-
-    }
-);
-
-
-/*
-====================================================
-EVENT LISTENERS
-====================================================
-*/
-
-searchInput.addEventListener(
-    "input",
-    filterProblems
-);
-
-
-categoryFilter.addEventListener(
-    "change",
-    filterProblems
-);
-
-
-themeFilter.addEventListener(
-    "change",
-    filterProblems
-);
-
-
+document.getElementById("noteBtn").addEventListener("click", () => {
+  const note = prompt("Add a short caregiver note for today:");
+  if (note && note.trim()) {
+    alert("Note saved locally for this prototype.");
+  }
+});
 
 /*
-====================================================
-INITIALIZE
-====================================================
+  EASY FUTURE BACKEND HOOK:
+  Replace the mock `activities` object above with data fetched from an API.
+
+  Example later:
+  const response = await fetch("/api/activities");
+  const activities = await response.json();
+
+  Keep the UI functions the same so the frontend can later be connected
+  to Firebase, Supabase, Node/Express, Django, etc. without rebuilding
+  the page structure.
 */
-
-createFilters();
-
-displayProblems(problems);
